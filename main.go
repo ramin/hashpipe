@@ -37,7 +37,18 @@ func DataReader(input *string) *bufio.Reader {
 }
 
 func DataWriter(output *string) *csv.Writer {
-	return csv.NewWriter(os.Stdout)
+	if *output == "stdout" {
+		return csv.NewWriter(os.Stdout)
+	} else {
+		outfile, err := os.Create("output.csv")
+
+		if err != nil {
+			fmt.Println(err)
+			panic(err)
+		}
+
+		return csv.NewWriter(outfile)
+	}
 }
 
 func BuildOffsetMap(fields string) []int {
@@ -90,12 +101,6 @@ func main() {
 	for {
 		line, err := data.Read()
 
-		for _, offset := range fieldMap {
-			value := []byte(line[offset])
-			hash := hashBuilder.Sum(value)
-			line[offset] = hex.EncodeToString(hash)
-		}
-
 		if err == io.EOF {
 			break
 		}
@@ -105,7 +110,18 @@ func main() {
 			break
 		}
 
-		writer.Write(line)
-		writer.Flush()
+		for _, offset := range fieldMap {
+			value := []byte(line[offset])
+			hash := hashBuilder.Sum(value)
+			line[offset] = hex.EncodeToString(hash)
+		}
+
+		err = writer.Write(line)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+//		writer.Flush()
 	}
 }
