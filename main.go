@@ -118,10 +118,12 @@ func main() {
 		}
 
 		for _, offset := range fieldMap {
-			hashBuilder := md5.New()
-			value := []byte(line[offset])
-			hashBuilder.Write(value)
-			line[offset] = hex.EncodeToString(hashBuilder.Sum(nil))
+			if offset <= len(line) {
+				hashBuilder := md5.New()
+				value := []byte(line[offset])
+				hashBuilder.Write(value)
+				line[offset] = hex.EncodeToString(hashBuilder.Sum(nil))
+			}
 		}
 
 		err = writer.Write(line)
