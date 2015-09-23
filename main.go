@@ -18,6 +18,7 @@ var (
 	output *string
 	encryptedFields *string
 	encryptionScheme *string
+	header *bool
 	fieldMap []int
 )
 
@@ -26,7 +27,6 @@ func DataReader(input *string) *bufio.Reader {
 		return bufio.NewReader(os.Stdin)
 	} else {
 		source, err := os.Open(*input)
-		defer source.Close()
 
 		if err != nil {
 			fmt.Println(err)
@@ -76,6 +76,7 @@ func BuildOffsetMap(fields string) []int {
 
 func main() {
 	input = flag.String("input", "stdin", "input file")
+	header = flag.Bool("header", true, "file contains header?")
 	output = flag.String("output", "stdout", "output file")
 	encryptionScheme = flag.String("scheme", "sha1", "sha1,md5...")
 	encryptedFields = flag.String("fields", "", "eg: 0,3,8")
@@ -87,7 +88,6 @@ func main() {
 	}
 
 	fieldMap := BuildOffsetMap(*encryptedFields)
-	hashBuilder := md5.New()
 
 	if len(fieldMap) == 0 {
 		fmt.Println("no valid fields, try 0 indexed, 0,1,2")
@@ -97,9 +97,15 @@ func main() {
 	reader := DataReader(input)
 	data := csv.NewReader(reader)
 	writer := DataWriter(output)
+	headRead := false
 
 	for {
 		line, err := data.Read()
+
+		if *header == true && headRead == false {
+			headRead = true
+			continue
+		}
 
 		if err == io.EOF {
 			break
@@ -111,9 +117,10 @@ func main() {
 		}
 
 		for _, offset := range fieldMap {
+			hashBuilder := md5.New()
 			value := []byte(line[offset])
-			hash := hashBuilder.Sum(value)
-			line[offset] = hex.EncodeToString(hash)
+			hashBuilder.Write(value)
+			line[offset] = hex.EncodeToString(hashBuilder.Sum(nil))
 		}
 
 		err = writer.Write(line)
@@ -122,6 +129,6 @@ func main() {
 			fmt.Println(err)
 		}
 
-//		writer.Flush()
+		writer.Flush()
 	}
 }
