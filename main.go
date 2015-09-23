@@ -40,7 +40,7 @@ func DataWriter(output *string) *csv.Writer {
 	if *output == "stdout" {
 		return csv.NewWriter(os.Stdout)
 	} else {
-		outfile, err := os.Create("output.csv")
+		outfile, err := os.Create(*output)
 
 		if err != nil {
 			fmt.Println(err)
@@ -103,6 +103,7 @@ func main() {
 		line, err := data.Read()
 
 		if *header == true && headRead == false {
+			writer.Write(line)
 			headRead = true
 			continue
 		}
