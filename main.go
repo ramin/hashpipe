@@ -4,22 +4,22 @@ import (
 	"bufio"
 	"crypto/md5"
 	"encoding/csv"
+	"encoding/hex"
 	"flag"
 	"fmt"
-	"encoding/hex"
 	"io"
 	"os"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 var (
-	input *string
-	output *string
-	encryptedFields *string
+	input            *string
+	output           *string
+	encryptedFields  *string
 	encryptionScheme *string
-	header *bool
-	fieldMap []int
+	header           *bool
+	fieldMap         []int
 )
 
 func DataReader(input *string) *bufio.Reader {
